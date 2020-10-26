@@ -1,19 +1,29 @@
 pragma solidity >=0.5.0;
-
-contract seedStorage{
+import "./seedOwner.sol";
+contract seedStorage is seedOwner {
 
     /* 
         producer
         inspector
         lab
     */
-    constructor(){
+    constructor() public{
             authorizedCaller[msg.sender] = 1;
     }
     //modifier to see is function caller is authorized
     modifier onlyAuthCaller(){
         require(authorizedCaller[msg.sender] == 1);
         _;
+    }
+    function authorizeCaller(address _caller) public onlyOwner returns(bool){
+        authorizedCaller[_caller] = 1;
+        return true;
+
+    }
+    function deAuthorizeCaller(address _caller) public onlyOwner returns(bool) 
+    {
+        authorizedCaller[_caller] = 0;
+        return true;
     }
     mapping(address => uint) authorizedCaller;
     struct batchDetails{
@@ -66,6 +76,17 @@ contract seedStorage{
     lab labData;
     distributor distributorData;
     /*set user details*/
+    /* Get User Role */
+    function getUserRole(address _userAddress) public onlyAuthCaller view returns(string memory)
+    {
+        return userRole[_userAddress];
+    }
+    
+    /* Get Next Action  */    
+    function getNextAction(address _batchNo) public onlyAuthCaller view returns(string memory)
+    {
+        return nextAction[_batchNo];
+    }
     function setUser(address _userAddress,
                     string memory _name,
                     string memory _contactNo,
