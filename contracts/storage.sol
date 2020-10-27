@@ -87,6 +87,8 @@ contract seedStorage is seedOwner {
     {
         return nextAction[_batchNo];
     }
+
+    /*set User */
     function setUser(address _userAddress,
                     string memory _name,
                     string memory _contactNo,
@@ -104,7 +106,15 @@ contract seedStorage is seedOwner {
             return true;
 
     }
+    /*get User */
+    function getUser(address _user) public view returns(string memory _name,
+                    string memory _contactNo,
+                    string memory _location,
+                    string memory _userType){
+        user memory temp = userDetails[_user];
+        return (temp.name,temp.contactNo,temp.location,temp.usertype);
 
+    }
     /*get batch details*/
 
     function getBatchDetails(address _batchNo) public view onlyAuthCaller returns(
@@ -166,7 +176,7 @@ contract seedStorage is seedOwner {
     function getInspectorData(address _batchNo) public view onlyAuthCaller returns(
         string memory typeOfSeed,
         string memory fertilizer,
-        string memory seedCondtion,
+        string memory seedCondition,
         uint quantity) {
 
         inspector memory tempData = batchInspector[_batchNo];
@@ -190,14 +200,14 @@ contract seedStorage is seedOwner {
 
         /* batch lab mapping*/
         batchLab[_batchNo] = labData;
-        nextAction[_batchNo] = 'DIST';
+        nextAction[_batchNo] = 'DISTRIBUTOR';
         return(true);
     
     }
 
     /*get lab data */
 
-    function getLabData(address _batchNo) public view onlyAuthCaller returns(uint _temp,
+    function getLabData(address _batchNo) public view onlyAuthCaller returns(uint temp,
                         uint germ,
                         uint purification,
                         uint seedMoisture,
@@ -230,7 +240,7 @@ contract seedStorage is seedOwner {
     /*get distributor data */
 
     function getDistributorData(address _batchNo) public view onlyAuthCaller returns(uint quantity,
-                                string memory warehouseName,
+                                string memory wareHouseName,
                                 string memory transportType,
                                 string memory date){
         distributor memory temp = batchDistributor[_batchNo];
