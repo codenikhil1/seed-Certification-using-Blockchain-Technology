@@ -139,11 +139,13 @@ contract seedStorage is seedOwner {
         return (temp.producerName,temp.seedType,temp.quantity);
     }
 
+    
     /*set batch details*/
 
     function setBatchDetails(string memory _producerName,
                             string memory _seedType,
-                            uint _quantity) public onlyAuthCaller returns(address){
+                            uint _quantity) public returns(address){
+        require(keccak256(abi.encodePacked(getUserRole(msg.sender))) == keccak256(abi.encodePacked('PRODUCER')));
         uint tempData = uint (keccak256(abi.encodePacked(_producerName,block.timestamp)));
         address batchNo = address(tempData);
 
