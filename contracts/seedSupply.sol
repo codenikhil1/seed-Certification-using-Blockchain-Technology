@@ -1,4 +1,5 @@
 pragma solidity >=0.5.0;
+pragma experimental ABIEncoderV2;
 import "./seedOwner.sol";
 contract seed is seedOwner{
 
@@ -271,6 +272,20 @@ contract seed is seedOwner{
             distribution memory temp = batchDistribution[_batchId];
             return(temp.storeHouse,temp.Date);
     }
+
+    function consumer(string memory _batchId) public view returns(BatchDetails memory bcon,seedGrower memory scon,
+    processor memory spcon,lab memory lcon,certification memory ccon,distribution memory dcon){
+        
+         BatchDetails memory batchcon = batchBasicDetails[_batchId];
+        seedGrower memory seedcon = batchGrower[_batchId];
+        processor memory processorcon = batchProcessor[_batchId];
+        lab memory labcon = batchLab[_batchId];
+        certification memory certificon = batchCertification[_batchId];
+        distribution memory distcon = batchDistribution[_batchId];
+
+        return(batchcon,seedcon,processorcon,labcon,certificon,distcon);
+    }
+    
 
 
 }
