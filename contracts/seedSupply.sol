@@ -1,271 +1,275 @@
 pragma solidity >=0.5.0;
 import "./seedOwner.sol";
-contract seedStorage is seedOwner {
+contract seed is seedOwner{
 
-    /* 
-        producer
-        inspector
-        lab
-    */
-    event UserUpdate(address indexed user,string name,string contact,string location,string userType);
-    event BatchAdded(address indexed user,address indexed batchNo);
-    event DoneInspection(address indexed user,address indexed batchNo);
-    event DoneLab(address indexed user,address indexed batchNo);
-    event DoneDistribution(address indexed user,address indexed batchNo);
-    
+    //events
+    event UserAdded(address indexed user,string name,string userType);
+    event BatchAdded(address indexed user,string  batchNo);
+    event DoneCultivation(address indexed user,string  batchNo);
+    event DoneProcessing(address indexed user,string  batchNo);
+    event DoneLab(address indexed user,string  batchNo);
+    event DoneCertification(address indexed user,string  batchNo);
+    event DoneDistribution(address indexed user,string  batchNo);
+
+
     constructor() public{
-            authorizedCaller[msg.sender] = 1;
+        authorizedCaller[msg.sender] = 1;
     }
 
-    //modifier to see is function caller is authorized
     modifier onlyAuthCaller(){
         require(authorizedCaller[msg.sender] == 1);
         _;
     }
-     modifier isValidPerformer(address batchNo,string memory role){
+    modifier isValidPerformer(string memory batchNo,string memory role){
         require(keccak256(abi.encodePacked(getUserRole(msg.sender))) == keccak256(abi.encodePacked(role)));
         require(keccak256(abi.encodePacked(getNextAction(batchNo))) == keccak256(abi.encodePacked(role)));
         _;
     }
-
-    function authorizeCaller(address _caller) public onlyOwner returns(bool){
-        authorizedCaller[_caller] = 1;
-        return true;
-
-    }
-    function deAuthorizeCaller(address _caller) public onlyOwner returns(bool) 
-    {
-        authorizedCaller[_caller] = 0;
-        return true;
-    }
+    //authorizeCalller Mapping
     mapping(address => uint) authorizedCaller;
-    struct batchDetails{
-        string producerName;
-        string seedType;
-        uint quantity;
 
-    }
+    //strcutures
     struct user{
         string name;
-        string contactNo;
-        string location;
-        string usertype;
+        string userType;
     }
-    mapping(address => user) userDetails;
-
-    struct inspector{
-        string typeOfSeed;
-        string fertilizer;
-        string seedCondition;
+    struct BatchDetails{ 
+        string batchId;
+        string crop;
+        string variety;
+        uint sourceQuantity;
+        string Date;
+        string Owner;
+        uint plotno;
+    }
+    struct seedGrower{
+        string date;
+    }
+    struct processor{
+        string batchId;
         uint quantity;
+        string date;
     }
     struct lab{
-            uint temp;
-            uint purification;
-            uint germ;
-            uint seedMoisture;
-            uint quantity;
+        string  batchId;
+        string date;
+        string result;
     }
-    struct distributor{
-            uint quantity;
-            string warehouseName;
-            string transportType;
-            string date;
+    struct certification{
+        string batchId;
+        string certifacateNo;
+        string date;
+        uint validity;
+    }
+    struct distribution{
+        string batchId;
+        string storeHouse;
+        string Date;
     }
 
-    mapping(address => batchDetails) batchBasicDetails;
-    mapping(address=> inspector) batchInspector;
-    mapping(address => lab) batchLab;
-    mapping(address => distributor) batchDistributor;
-    mapping(address => string) nextAction;
-
-    //role mapping
+    //mappings
+    mapping(string => BatchDetails) batchBasicDetails;
+    mapping(string =>seedGrower) batchGrower;
+    mapping(string => processor) batchProcessor;
+    mapping(string => lab) batchLab;
+    mapping(string => certification) batchCertification;
+    mapping(string => distribution) batchDistribution;
+    mapping(string => string) nextAction;
     mapping(address => string) userRole;
-    
-    //producer producerData;
-    batchDetails BatchDetailsData;
+    mapping(address =>user) userDetails;
+    mapping(string => uint) batchPresent;
+    //struct variables
     user userData;
-    inspector inspectorData;
+    BatchDetails batchData;
+    seedGrower seedGrowerData;
+    processor processorData;
     lab labData;
-    distributor distributorData;
-    /*set user details*/
-    /* Get User Role */
-    function getUserRole(address _userAddress) public  view returns(string memory)
-    {
-        return userRole[_userAddress];
-    }
-    
-    /* Get Next Action  */    
-    function getNextAction(address _batchNo) public  view returns(string memory)
-    {
-        return nextAction[_batchNo];
+    certification certificationData;
+    distribution distributionData;
+
+    //functions
+
+    function getUserRole(address _user) public view returns(string memory){
+        return userRole[_user];
     }
 
-    /*set User */
+    function getNextAction(string memory batchNo) public view returns(string memory){
+        return nextAction[batchNo];
+    }
+
     function setUser(address _userAddress,
                     string memory _name,
-                    string memory _contactNo,
-                    string memory _location,
                     string memory _userType) public onlyAuthCaller onlyOwner returns(bool){
-            /*store data into struct*/
-            userData.name = _name;
-            userData.location = _location;
-            userData.usertype = _userType;
-            userData.contactNo = _contactNo;
+        userData.name = _name;
+        userData.userType = _userType;
 
-            /*store data into mapping*/
-            userDetails[_userAddress] = userData;
-            userRole[_userAddress] = _userType;
-            emit UserUpdate(_userAddress,_name,_contactNo,_location,_userType);
-            return true;
+        userDetails[_userAddress] = userData;
+        userRole[_userAddress] = _userType;
 
+        emit UserAdded(_userAddress,_name,_userType);
+        return true;             
     }
-    /*get User */
-    function getUser(address _user) public view returns(string memory _name,
-                    string memory _contactNo,
-                    string memory _location,
-                    string memory _userType){
+
+    function getUser(address _user) public view returns(
+        string memory name,
+        string memory userType
+    ){
         user memory temp = userDetails[_user];
-        return (temp.name,temp.contactNo,temp.location,temp.usertype);
-
-    }
-    /*get batch details*/
-
-    function getBatchDetails(address _batchNo) public view  returns(
-        string memory producerName,
-        string memory seedType,
-        uint quantity) {
-        batchDetails memory temp = batchBasicDetails[_batchNo];
-        return (temp.producerName,temp.seedType,temp.quantity);
+        return(temp.name,temp.userType);
     }
 
+    //seed agency
+
+    function setBatchDetails(string memory _batchId,
+        string memory _crop,
+        string memory _variety,
+        uint _sourceQuantity,
+        string memory _Date,
+        string memory _Owner,
+        uint _plotno) public returns(bool){
+    require(keccak256(abi.encodePacked(getUserRole(msg.sender))) == keccak256(abi.encodePacked('SeedProducingAgency')));
+    require(batchPresent[_batchId] == 0);
+
+    batchData.batchId = _batchId;
+    batchData.crop = _crop;
+    batchData.variety = _variety;
+    batchData.sourceQuantity = _sourceQuantity;
+    batchData.Date = _Date;
+    batchData.Owner = _Owner;
+    batchData.plotno = _plotno;
     
-    /*set batch details*/
+    batchPresent[_batchId] = 1;
+    batchBasicDetails[_batchId] = batchData;
 
-    function setBatchDetails(string memory _producerName,
-                            string memory _seedType,
-                            uint _quantity) public returns(address){
-        require(keccak256(abi.encodePacked(getUserRole(msg.sender))) == keccak256(abi.encodePacked('PRODUCER')));
-        uint tempData = uint (keccak256(abi.encodePacked(_producerName,block.timestamp)));
-        address batchNo = address(tempData);
-
-        /*set struct data*/
-        BatchDetailsData.producerName = _producerName;
-        BatchDetailsData.seedType = _seedType;
-        BatchDetailsData.quantity = _quantity;
-
-        /*set mapping*/
-        batchBasicDetails[batchNo] = BatchDetailsData;
-
-        /*set next action mapping*/
-        nextAction[batchNo] = 'INSPECTOR';
-        emit BatchAdded(msg.sender,batchNo);
-        return batchNo;
-
-                                
+    nextAction[_batchId] = 'SeedGrower';
+    emit BatchAdded(msg.sender,_batchId);
+    return true;
     }
 
-    /*set farm inspector*/
+    function getBatchDetails(string memory _batchId) public view returns(string memory _crop,
+        string memory _variety,
+        uint _sourceQuantity,
+        string memory _Date,
+        string memory _Owner,
+        uint _plotno){
+        BatchDetails memory temp = batchBasicDetails[_batchId];
+        return (temp.crop,temp.variety,temp.sourceQuantity,temp.Date,temp.Owner,temp.plotno);
 
-    function setFarmInspector(address _batchNo,
-                            string memory _typeOfSeed,
-                            string memory _fertilizer,
-                            string memory _seedCondtion,
-                            uint _quantity
-                            ) public  isValidPerformer(_batchNo,'INSPECTOR') returns(bool){
-            /*set struct*/
-            inspectorData.typeOfSeed = _typeOfSeed;
-            inspectorData.fertilizer = _fertilizer;
-            inspectorData.seedCondition = _seedCondtion;
-            inspectorData.quantity = _quantity;
-            /*set batch mapping*/
-            batchInspector[_batchNo] = inspectorData;
-
-            /*set next action mapping*/
-            nextAction[_batchNo] = 'LAB';
-            emit DoneInspection(msg.sender,_batchNo);
-            return true;
     }
 
-    /*get inspector data*/
+    //seed Grower
 
-    function getInspectorData(address _batchNo) public view  returns(
-        string memory typeOfSeed,
-        string memory fertilizer,
-        string memory seedCondition,
-        uint quantity) {
+    function setSeedGrower(string memory _batchId,string memory _date) public isValidPerformer(_batchId,'SeedGrower') returns(bool){
+        seedGrowerData.date = _date;
+        batchGrower[_batchId] = seedGrowerData;
 
-        inspector memory tempData = batchInspector[_batchNo];
+        nextAction[_batchId] = 'Processor';
 
-        return(tempData.typeOfSeed,tempData.fertilizer,tempData.seedCondition,tempData.quantity);
+        emit DoneCultivation(msg.sender,_batchId);
+
+        return true;
+
     }
 
-    /* set lab data */
-        function setLabData(address _batchNo,
-                        uint _temp,
-                        uint _germ,
-                        uint _purification,
-                        uint _seedMoisture,
-                        uint _quantity) public  isValidPerformer(_batchNo,'LAB') returns(bool){
-        /*set lab struct */
-        labData.temp = _temp;
-        labData.germ = _germ;
-        labData.purification = _purification;
-        labData.seedMoisture = _seedMoisture;
-        labData.quantity = _quantity;
+    function getSeedGrower(string memory _batchId) public view returns(string memory date){
+        seedGrower memory temp = batchGrower[_batchId];
+        return(temp.date);
+    }
 
-        /* batch lab mapping*/
-        batchLab[_batchNo] = labData;
-        nextAction[_batchNo] = 'DISTRIBUTOR';
-        emit DoneLab(msg.sender,_batchNo);
+    //processor
+    function setProcessor( string memory _batchId,
+        uint _quantity,
+        string memory _date) public isValidPerformer(_batchId,'Processor') returns(bool){
+        processorData.batchId = _batchId;
+        processorData.quantity = _quantity;
+        processorData.date = _date;
+
+        batchProcessor[_batchId] = processorData;
+
+        nextAction[_batchId] = 'Lab';
+
+        emit DoneProcessing(msg.sender,_batchId);
+        return true;
+    
+    }
+
+    function getProcessor(string memory _batchId) public view returns(uint _quantity,
+        string memory _date){
+            
+            processor memory temp = batchProcessor[_batchId];
+            return(temp.quantity,temp.date);
+    }
+
+
+    //lab
+    function setLab( string memory _batchId,
+        string memory _date,
+        string memory _result) public isValidPerformer(_batchId,'Lab') returns(bool){
+       labData.batchId = _batchId;
+       labData.date = _date;
+       labData.result = _result;
+
+        batchLab[_batchId] = labData;
+        nextAction[_batchId] = 'Certification';
+        emit DoneLab(msg.sender,_batchId);
         return(true);
+
+    }
+
+    function getLab(string memory _batchId) public view returns(string memory _date,
+        string memory _result){
+            lab memory temp = batchLab[_batchId];
+            return(temp.date,temp.result);
+    }
+
+    //certification egency
+
+    function setCertification(string memory _batchId,
+        string memory _certifacateNo,
+        string memory _date,
+        uint _validity) public isValidPerformer(_batchId,'Certification') returns(bool){
+    
+    certificationData.batchId = _batchId;
+    certificationData.certifacateNo = _certifacateNo;
+    certificationData.date = _date;
+    certificationData.validity = _validity;
+
+    batchCertification[_batchId] =  certificationData;  
+    nextAction[_batchId] = 'Distributor';
+    emit DoneCertification(msg.sender,_batchId);
+    return true;
     
     }
 
-    /*get lab data */
-
-    function getLabData(address _batchNo) public view  returns(uint temp,
-                        uint germ,
-                        uint purification,
-                        uint seedMoisture,
-                        uint quantity){
-
-         lab memory tempData = batchLab[_batchNo];
-         return(tempData.temp,tempData.germ,tempData.purification,tempData.seedMoisture,tempData.quantity);   
+    function getCertification(string memory _batchId) public view returns(string memory _certifacateNo,
+        string memory _date,
+        uint _validity){
+    
+    certification memory temp = batchCertification[_batchId];
+    return(temp.certifacateNo,temp.date,temp.validity);
+    
     }
 
-    /*set distributor data */
+    //distributor
 
-    function  setDistributorData(address _batchNo,
-                                uint _quantity,
-                                string memory _warehouseName,
-                                string memory _transportType,
-                                string memory _date)public  isValidPerformer(_batchNo,'DISTRIBUTOR') returns(bool){
-       /*put info in distributor struct */
-        distributorData.quantity = _quantity;
-        distributorData.warehouseName = _warehouseName;
-        distributorData.transportType = _transportType;
-        distributorData.date = _date;
-        
-        /*fill mapping */
+    function setDistribution(string memory _batchId,
+        string memory _storeHouse,
+        string memory _Date) public isValidPerformer(_batchId,'Distributor') returns(bool){
 
-        batchDistributor[_batchNo] = distributorData;
-        nextAction[_batchNo] = 'CONS';
-        emit DoneDistribution(msg.sender,_batchNo);
-        return (true);
+    distributionData.batchId = _batchId;
+    distributionData.storeHouse = _storeHouse;
+    distributionData.Date = _Date;
+
+    batchDistribution[_batchId]  = distributionData;
+    nextAction[_batchId] = 'Consumer';
+    emit DoneDistribution(msg.sender,_batchId);
+    return true;
     }
-    
-    /*get distributor data */
 
-    function getDistributorData(address _batchNo) public view onlyAuthCaller returns(uint quantity,
-                                string memory wareHouseName,
-                                string memory transportType,
-                                string memory date){
-        distributor memory temp = batchDistributor[_batchNo];
-
-        return (temp.quantity,temp.warehouseName,temp.transportType,temp.date);
-    
-    
+    function getDistribution(string memory _batchId) public view returns(string memory _storeHouse,
+        string memory _Date){
+            distribution memory temp = batchDistribution[_batchId];
+            return(temp.storeHouse,temp.Date);
     }
 
 
