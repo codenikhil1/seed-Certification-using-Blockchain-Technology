@@ -119,7 +119,8 @@ This page consist of fields to add user
 - More fields and stakeholders can be added.
 - Local language support. eg Marathi, Hindi etc.
 
-
-
+# Contact
+- ```Nikhil Sonawane Email - nikhilsonawane1@yahoo.com```
+- ```Siddharaj Mane Email - 	manesiddharaj8@gmail.com```
 
 
