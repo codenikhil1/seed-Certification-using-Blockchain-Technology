@@ -34,7 +34,7 @@ Then run the below command
 Then Copy contract address of seedSupply contract
 
 # After above steps 
--Clone Front-End from ```https://github.com/siddhu890/seed-tracking-blockchain
+- Clone Front-End from ```https://github.com/siddhu890/seed-tracking-blockchain```
 
 - In src/contract.js add contract address to connect as given below
   ```javascript
