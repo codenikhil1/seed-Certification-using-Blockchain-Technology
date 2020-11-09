@@ -20,8 +20,8 @@ Date and other information. The following stakeholders are involved
 
 ## Installation
 
-##Install Truffle
-##Install Ganache
+## Install Truffle
+## Install Ganache
 -check port number mentioned in file truffle-config.js is same as ganache is running on.
 
 # Deploying smart contract
